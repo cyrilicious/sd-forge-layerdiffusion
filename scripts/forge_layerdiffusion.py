@@ -120,14 +120,6 @@ class LayerDiffusionForForge(scripts.Script):
         method = LayerMethod(method)
         print(f'[Layer Diffusion] {method}')
 
-        resize_mode = ResizeMode(resize_mode)
-        fg_image = crop_and_resize_image(rgba2rgbfp32(fg_image), resize_mode, height, width) if fg_image is not None else None
-        bg_image = crop_and_resize_image(rgba2rgbfp32(bg_image), resize_mode, height, width) if bg_image is not None else None
-        blend_image = crop_and_resize_image(rgba2rgbfp32(blend_image), resize_mode, height, width) if blend_image is not None else None
-
-        original_unet = p.sd_model.forge_objects.unet.clone()
-        unet = p.sd_model.forge_objects.unet.clone()
-        vae = p.sd_model.forge_objects.vae.clone()
 
         if method in [LayerMethod.FG_ONLY_ATTN, LayerMethod.FG_ONLY_CONV, LayerMethod.BG_BLEND_TO_FG]:
             if vae_transparent_decoder is None:
@@ -147,6 +139,17 @@ class LayerDiffusionForForge(scripts.Script):
                 )
                 vae_transparent_encoder = TransparentVAEEncoder(load_torch_file(model_path))
             vae_transparent_encoder.patch(p, vae.patcher)
+        resize_mode = ResizeMode(resize_mode)
+        fg_image = crop_and_resize_image(rgba2rgbfp32(fg_image), resize_mode, height,
+                                         width) if fg_image is not None else None
+        bg_image = crop_and_resize_image(rgba2rgbfp32(bg_image), resize_mode, height,
+                                         width) if bg_image is not None else None
+        blend_image = crop_and_resize_image(rgba2rgbfp32(blend_image), resize_mode, height,
+                                            width) if blend_image is not None else None
+
+        original_unet = p.sd_model.forge_objects.unet.clone()
+        unet = p.sd_model.forge_objects.unet.clone()
+        vae = p.sd_model.forge_objects.vae.clone()
 
         if fg_image is not None:
             fg_image = vae.encode(torch.from_numpy(np.ascontiguousarray(fg_image[None].copy())))
